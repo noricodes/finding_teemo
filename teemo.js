@@ -1,5 +1,5 @@
-var N = 50; // the fluid is subdivided into NxN cells
-var NUM_PARTICLES = 30; // number of particles
+var N = 50;             // the fluid is subdivided into NxN cells
+var NUM_SHROOMS = 30;   // number of shrooms on the map
 var hasFriction = true;
 
 
@@ -16,32 +16,34 @@ var create2DArray = function( numColumns, numRows ) {
 }
 
 
-var Particle = {
+var Item = {
    x: 0, y : 0,  // real number coordinates in grid_units.
                  // x increases right and is in the interval [0,N-1].
                  // y increases down and is in the interval [0,N-1].
                  // Coordinates (0,0) are the center of the upper-left-most cell;
                  // and (N-1,N-1) are the center of the lower-right-most cell.
 
-   // Call this to give a random position to the particle.
+   found: false,  // found state of the item.
+
+   // Call this to give a random position to the item.
    chooseRandomPosition : function() {
       this.x = Math.random() * (N-1); // random number between 0 and N-1
       this.y = Math.random() * (N-1); // random number between 0 and N-1
    }
 };
 
-var Fluid = {
+var Grass = {
    vx : [], vy : [], // vx and vy are 2D arrays that store the velocity,
                      // in grid_units/time_step, for each cell center.
                      // For a given position (X,Y) in the grid,
                      // where X,Y are integers in [0,N-1],
                      // vx[X][Y] and vy[X][Y] store the velocity vector.
                      // If vx[X][Y] and vy[X][Y] are both zero,
-                     // the fluid at position (X,Y) is not moving.
-                     // A positive vx[X][Y] means the fluid is moving to the right.
+                     // the grass at position (X,Y) is not moving.
+                     // A positive vx[X][Y] means the grass is moving to the right.
                      // A positive vy[X][Y] means downward movement.
 
-   p : []            // p is a 2D array storing the pressure of the fluid
+   p : []            // p is a 2D array storing the pressure of the grass
                      // at each cell center.
                      // For a given position (X,Y) in the grid,
                      // where X,Y are integers in [0,N-1],
@@ -49,18 +51,20 @@ var Fluid = {
 };
 
 var shrooms = [];
-var found_shrooms = [];
+var teemo = Object.create( Item );
 
-Fluid.vx = create2DArray(N, N);
-Fluid.vy = create2DArray(N, N);
-Fluid.p = create2DArray(N, N);
+Grass.vx = create2DArray(N, N);
+Grass.vy = create2DArray(N, N);
+Grass.p = create2DArray(N, N);
 
-// fill the array with particles
-for ( var i = 0; i < NUM_PARTICLES; i++ ) {
-   var p = Object.create( Particle );
-   p.chooseRandomPosition();
-   shrooms.push( p );  // add the new shroom to the end of the array
+// fill the array with shrooms
+for ( var i = 0; i < NUM_SHROOMS; i++ ) {
+   var s = Object.create( Item );
+   s.chooseRandomPosition();
+   shrooms.push( s );   // add the new shroom to the end of the array
 }
+
+teemo.chooseRandomPosition();
 
 // advances the simulation by one time step
 var advanceOneIteration = function() {
@@ -68,20 +72,20 @@ var advanceOneIteration = function() {
    // update the pressure values
    for ( var X = 1; X < N-1; X++ ) {
       for ( var Y = 1; Y < N-1; Y++ ) {
-         var pressureX = Fluid.vx[X-1][Y] - Fluid.vx[X+1][Y];
-         var pressureY = Fluid.vy[X][Y-1] - Fluid.vy[X][Y+1];
-         Fluid.p[X][Y] = (pressureX+pressureY) * 0.5;
+         var pressureX = Grass.vx[X-1][Y] - Grass.vx[X+1][Y];
+         var pressureY = Grass.vy[X][Y-1] - Grass.vy[X][Y+1];
+         Grass.p[X][Y] = (pressureX+pressureY) * 0.5;
       }
    }
 
    // update the velocity vectors
    for ( var X = 1; X < N-1; X++ ) {
       for ( var Y = 1; Y < N-1; Y++ ) {
-         Fluid.vx[X][Y] += ( Fluid.p[X-1][Y  ]-Fluid.p[X+1][Y  ] )*0.5;
-         Fluid.vy[X][Y] += ( Fluid.p[X  ][Y-1]-Fluid.p[X  ][Y+1] )*0.5;
+         Grass.vx[X][Y] += ( Grass.p[X-1][Y  ] - Grass.p[X+1][Y  ] )*0.5;
+         Grass.vy[X][Y] += ( Grass.p[X  ][Y-1] - Grass.p[X  ][Y+1] )*0.5;
          if ( hasFriction ) {
-            Fluid.vx[X][Y] *= 0.95;
-            Fluid.vy[X][Y] *= 0.95;
+            Grass.vx[X][Y] *= 0.95;
+            Grass.vy[X][Y] *= 0.95;
          }
       }
    }
@@ -98,9 +102,8 @@ var y0 = ( HEIGHT_IN_PIXELS - sizeOfCellInPixels * N )/2;
 
 var mouse_x = 0; // in pixels
 var mouse_y = 0; // in pixels
-var leftButtonPressed = false; // true if the left mouse button is pressed
-var rightButtonPressed = false;
-var spoonRadius = 8; // in pixels
+var searchRadius = 8; // in pixels
+var shroomRadius = 5;
 
 var drawLine = function( x1, y1, x2, y2 ) {
    C.beginPath();
@@ -108,6 +111,7 @@ var drawLine = function( x1, y1, x2, y2 ) {
    C.lineTo(x2,y2);
    C.stroke();
 }
+
 var drawCircle = function( x, y, radius ) {
    C.beginPath();
    C.arc(x, y, radius, 0, 2 * Math.PI, false);
@@ -120,39 +124,59 @@ var draw = function() {
    C.strokeStyle = 'white';
    for ( var X = 0; X < N; X++ ) {
       for ( var Y = 0; Y < N; Y++ ) {
-         var dx = Fluid.vx[X][Y] * sizeOfCellInPixels;
-         var dy = Fluid.vy[X][Y] * sizeOfCellInPixels;
+         var dx = Grass.vx[X][Y] * sizeOfCellInPixels;
+         var dy = Grass.vy[X][Y] * sizeOfCellInPixels;
          var x = x0 + (X+0.5)*sizeOfCellInPixels;
          var y = y0 + (Y+0.5)*sizeOfCellInPixels;
          drawLine( x, y, x+dx, y+dy );
       }
    }
 
-    C.strokeStyle = 'red';
-    for ( var i = 0; i < shrooms.length; i++ ) {
-        var p = shrooms[i];
+   var m_center_x =  Math.floor(mouse_x);
+   var m_center_y = Math.floor(mouse_y);
+   var t_center_x = Math.floor(teemo.x*sizeOfCellInPixels);
+   var t_center_y = Math.floor(teemo.y*sizeOfCellInPixels);
 
-        var m_center_x =  Math.floor(mouse_x);
-        var m_center_y = Math.floor(mouse_y);
+   C.strokeStyle = 'red';
+   for ( var i = 0; i < shrooms.length; i++ ) {
+      var shroom = shrooms[i];
 
-        var s_center_x = Math.floor(p.x*sizeOfCellInPixels);
-        var s_center_y = Math.floor(p.y*sizeOfCellInPixels);
+      // var m_center_x =  Math.floor(mouse_x);
+      // var m_center_y = Math.floor(mouse_y);
 
-        if( m_center_x <= s_center_x + 5 + spoonRadius && m_center_x >= s_center_x - 5 -spoonRadius && m_center_y <= s_center_y + 5 + spoonRadius && m_center_y >= s_center_y - 5 - spoonRadius){
-         if(found_shrooms.indexOf(p) === -1){
-            found_shrooms.push(p);
-         }
-         
-        }
-    }
+      var s_center_x = Math.floor(shroom.x*sizeOfCellInPixels);
+      var s_center_y = Math.floor(shroom.y*sizeOfCellInPixels);
 
-    for (var i = 0; i < found_shrooms.length; i++){
-      var shroom = found_shrooms[i];
-      drawCircle( shroom.x*sizeOfCellInPixels, shroom.y*sizeOfCellInPixels, 5 );
-    }
+      if( m_center_x <= s_center_x + shroomRadius + searchRadius 
+       && m_center_x >= s_center_x - shroomRadius - searchRadius 
+       && m_center_y <= s_center_y + shroomRadius + searchRadius 
+       && m_center_y >= s_center_y - shroomRadius - searchRadius ){
+         shroom.found = true;
+      }
+   }
+
+   // teemo is found
+   if( m_center_x <= t_center_x + shroomRadius + searchRadius
+    && m_center_x >= t_center_x - shroomRadius - searchRadius 
+    && m_center_y <= t_center_y + shroomRadius + searchRadius
+    && m_center_y >= t_center_y - shroomRadius - searchRadius ){
+      teemo.found = true;
+   }
+
+   for (var i = 0; i < shrooms.length; i++){
+      var shroom = shrooms[i];
+      if(shroom.found){
+         drawCircle( shroom.x*sizeOfCellInPixels, shroom.y*sizeOfCellInPixels, shroomRadius );
+      }
+   }
 
    C.strokeStyle = 'white';
-   drawCircle(mouse_x,mouse_y,spoonRadius);
+   drawCircle( mouse_x, mouse_y, searchRadius );
+
+   C.strokeStyle = 'yellow';
+   if( teemo.found ){
+      drawCircle ( teemo.x*sizeOfCellInPixels, teemo.y*sizeOfCellInPixels, shroomRadius);
+   }
 }
 
 
@@ -187,9 +211,9 @@ function mouseMoveHandler(e) {
          var dx = X - spoon_center_x;
          var dy = Y - spoon_center_y;
          var distance = Math.sqrt(dx*dx+dy*dy);
-         if ( distance <= spoonRadius/sizeOfCellInPixels ) {
-            Fluid.vx[X][Y] += spoon_vx;
-            Fluid.vy[X][Y] += spoon_vy;
+         if ( distance <= searchRadius/sizeOfCellInPixels ) {
+            Grass.vx[X][Y] += spoon_vx;
+            Grass.vy[X][Y] += spoon_vy;
          }
       }
    }

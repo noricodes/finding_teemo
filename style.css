@@ -1,0 +1,17 @@
+body {
+    width:100%; 
+    text-align: center;
+    margin: 0;
+}
+
+main {
+    background-image: url(imgs/background.jpeg);
+    height: 100vh; /* You must set a specified height */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-size: cover;
+}
+
+h1 {
+    margin-top: 0;
+}

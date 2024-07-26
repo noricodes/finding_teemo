@@ -1,3 +1,8 @@
+@font-face {
+    font-family: League;
+    src: url(fonts/League.otf);
+}
+
 body {
     width:100%; 
     text-align: center;
@@ -10,8 +15,10 @@ main {
     background-position: center; /* Center the image */
     background-repeat: no-repeat; /* Do not repeat the image */
     background-size: cover;
+    display: flow-root;
 }
 
 h1 {
     margin-top: 0;
+    font-family: League;
 }

@@ -105,6 +105,9 @@ var mouse_y = 0; // in pixels
 var searchRadius = 8; // in pixels
 var shroomRadius = 5;
 
+var shroom_img = document.getElementById("shroom");
+var teemo_img = document.getElementById("teemo");
+
 var drawLine = function( x1, y1, x2, y2 ) {
    C.beginPath();
    C.moveTo(x1,y1);
@@ -166,16 +169,18 @@ var draw = function() {
    for (var i = 0; i < shrooms.length; i++){
       var shroom = shrooms[i];
       if(shroom.found){
-         drawCircle( shroom.x*sizeOfCellInPixels, shroom.y*sizeOfCellInPixels, shroomRadius );
+         // drawCircle( shroom.x*sizeOfCellInPixels, shroom.y*sizeOfCellInPixels, shroomRadius );
+         C.drawImage(shroom_img,shroom.x*sizeOfCellInPixels,shroom.y*sizeOfCellInPixels);
       }
    }
 
    C.strokeStyle = 'white';
    drawCircle( mouse_x, mouse_y, searchRadius );
 
-   C.strokeStyle = 'yellow';
+   // C.strokeStyle = 'yellow';
    if( teemo.found ){
-      drawCircle ( teemo.x*sizeOfCellInPixels, teemo.y*sizeOfCellInPixels, shroomRadius);
+      // drawCircle ( teemo.x*sizeOfCellInPixels, teemo.y*sizeOfCellInPixels, shroomRadius);
+      C.drawImage(teemo_img, teemo.x*sizeOfCellInPixels, teemo.y*sizeOfCellInPixels);
    }
 }
 

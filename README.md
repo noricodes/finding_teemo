@@ -1,14 +1,9 @@
-<centre>
+<p align="center">
     <img src="imgs/teemo-head.png" width="150"/>
-    <h2>Finding Teemo</h2>
-</centre>
-
-<center>
-    <p>A marco-polo-style game where you search through a field of tall grass with your mouse cursor to find Teemo while avoiding landing on mushrooms! </p>
+    <h2 align="center">Finding Teemo</h2>
+    <p align="center">A marco-polo-style game where you search through a field of tall grass with your mouse cursor to find Teemo while avoiding landing on mushrooms!</p>
     <img src="imgs/finding_teemo.png"/>
-
-    
-</center>
+</p>
 
 
 ### About

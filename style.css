@@ -38,3 +38,18 @@ h1 {
 img {
     width: 100%;
 }
+
+.win-menu {
+    position: absolute;
+    z-index: 10;
+    width: 100%;
+    height: -webkit-fill-available;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    justify-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: space-around;
+    visibility: hidden;
+}

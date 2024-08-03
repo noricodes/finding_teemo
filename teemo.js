@@ -229,4 +229,14 @@ canvas.addEventListener('mouseup',mouseUpHandler);
 canvas.addEventListener('mousemove',mouseMoveHandler);
 canvas.oncontextmenu = function(e){ return false; }; // disable the right-click menu
 
-setInterval( function() { advanceOneIteration(); draw(); }, 100 /*milliseconds*/ );
+var win_menu = document.getElementById("win_emote");
+
+setInterval( function() { 
+   if( !teemo.found ){
+      advanceOneIteration(); 
+      draw(); 
+   } else {
+      win_menu.setAttribute('style', 'visibility: visible;');
+   }
+   
+}, 100 /*milliseconds*/ );

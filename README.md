@@ -1,10 +1,7 @@
-<!-- ![](imgs/teemo-head.png) -->
 <center>
     <img src="imgs/teemo-head.png" width="150"/>
     <h2>Finding Teemo</h2>
 </center>
-
----
 
 <center>
     <p>A marco-polo-style game where you search through a field of tall grass with your mouse cursor to find Teemo while avoiding landing on mushrooms! </p>
